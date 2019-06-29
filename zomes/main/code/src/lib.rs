@@ -37,11 +37,19 @@ use hdk_proc_macros::zome;
 // This is a sample zome that defines an entry type "MyEntry" that can be committed to the
 // agent's chain via the exposed function create_my_entry
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson,Clone)]
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
 pub struct GameProposal {
     agent: Address,
     message: String,
 }
+
+#[derive(Serialize, Deserialize, Debug, DefaultJson, Clone)]
+pub struct Game {
+    pub player_1: Address,
+    pub player_2: Address,
+    pub created_at: u32,
+}
+
 
 #[zome]
 mod my_zome {
@@ -52,7 +60,7 @@ mod my_zome {
     }
 
     #[entry_def]
-     fn game_proposal_entry_def() -> ValidatingEntryType {
+    fn game_proposal_entry_def() -> ValidatingEntryType {
         entry!(
             name: "game_proposal",
             description: "this is a same entry representing a proposal to play a game",
@@ -62,8 +70,7 @@ mod my_zome {
             },
             validation: | validation_data: hdk::EntryValidationData<GameProposal>| {
                 match validation_data {
-                    EntryValidationData::Create {entry, validation_data} => {
-                        
+                    EntryValidationData::Create{entry, validation_data} => {
                         let proposal = GameProposal::from(entry);
                         if validation_data.sources().contains(&proposal.agent) {
                             Ok(())
@@ -77,6 +84,33 @@ mod my_zome {
                     }
                 }
             }
+        )
+    }
+
+    #[entry_def]
+    fn game_def() -> ValidatingEntryType {
+        entry!(
+            name: "game",
+            description: "this a same entry representing 2 players playing the game",
+            sharing: Sharing::Public, 
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: | _validation_data: hdk::EntryValidationData<Game>| {
+                Ok(()) // probably, should have complex logic here
+            },   
+            links: [
+                from!(
+                    "game_proposal",
+                    link_type: "game_from_proposal",
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: |_validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
+                )
+            ]
         )
     }
 
@@ -136,7 +170,6 @@ mod my_zome {
 
         Ok(proposal_address)
     }
-
 
     #[zome_fn("hc_public")]
     fn get_proposals() -> ZomeApiResult<Vec<GameProposal>> {
