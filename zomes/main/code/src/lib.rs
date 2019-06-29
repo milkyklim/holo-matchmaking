@@ -105,7 +105,7 @@ mod my_zome {
             links: [
                 from!(
                     "game_proposal",
-                    link_type: "game_from_proposal",
+                    link_type: "from_proposal",
                     validation_package: || {
                         hdk::ValidationPackageDefinition::Entry
                     },
@@ -194,7 +194,7 @@ mod my_zome {
         hdk::link_entries(
             &proposal_address,
             &game_address,
-            "from_proposal", // why not game_from_proposal
+            "from_proposal",
             ""
         )?;
 
@@ -214,7 +214,6 @@ mod my_zome {
             LinkMatch::Any
         )
     }
-
 
     #[zome_fn("hc_public")]
     fn get_proposals() -> ZomeApiResult<Vec<GameProposal>> {
