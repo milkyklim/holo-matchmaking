@@ -198,6 +198,11 @@ mod my_zome {
         //Ok(game_address)
         Ok(())
     }
+
+    #[zome_fn("hc_public")]
+    fn remove_proposal(proposal_address: Address) -> ZomeApiResult<Address>{
+        hdk::remove_entry(&proposal_address)
+    }
     
     #[zome_fn("hc_public")]
     fn check_responses(proposal_address: Address) -> ZomeApiResult<Vec<Game>> {
