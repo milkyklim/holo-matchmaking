@@ -18,6 +18,7 @@ use hdk::{
 use hdk::holochain_core_types::{
     entry::Entry,
     dna::entry_types::Sharing,
+    link::LinkMatch,
 };
 
 use hdk::holochain_json_api::{
@@ -26,7 +27,7 @@ use hdk::holochain_json_api::{
 };
 
 use hdk::holochain_persistence_api::{
-    cas::content::Address
+    cas::content::{Address, AddressableContent},
 };
 
 use hdk_proc_macros::zome;
@@ -118,7 +119,37 @@ mod my_zome {
             proposal.into()
         );
 
-        hdk::commit_entry(&entry)
+        let proposal_address = hdk::commit_entry(&entry)?;
+
+        let anchor_entry = Entry::App(
+            "anchor".into(),
+            "proposals".into(), // this is the entry data
+        );
+
+        let anchor_address = hdk::commit_entry(&anchor_entry)?;
+
+        hdk::link_entries(
+            &anchor_address, 
+            &proposal_address, 
+            "has_proposal",
+            "")?;
+
+        Ok(proposal_address)
     }
 
+
+    #[zome_fn("hc_public")]
+    fn get_proposals() -> ZomeApiResult<Vec<GameProposal>> {
+        let anchor_address = Entry::App(
+            "anchor".into(),
+            "proposals".into(), // this is the entry data
+        ).address();
+        
+        hdk::utils::get_links_and_load_type(
+            &anchor_address, 
+            LinkMatch::Exactly("has_proposal"),
+            LinkMatch::Any
+        )
+
+    }
 }
