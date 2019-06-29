@@ -13,12 +13,12 @@ use hdk::{
     entry_definition::ValidatingEntryType,
     error::ZomeApiResult,
     AGENT_ADDRESS, // api::AGENT_ADDRESS,
-    EntryValidationData,
 };
 use hdk::holochain_core_types::{
     entry::Entry,
     dna::entry_types::Sharing,
     link::LinkMatch,
+    validation::EntryValidationData,
 };
 
 use hdk::holochain_json_api::{
