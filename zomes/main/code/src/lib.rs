@@ -171,6 +171,44 @@ mod my_zome {
         Ok(proposal_address)
     }
 
+    #[zome_fn("fn_public")]
+    fn accept_proposal(proposal_address: Address, created_at: u32) -> ZomeApiResult<()> {
+        let proposal: GameProposal = hdk::utils::get_as_type(proposal_address.clone())?;
+        // create new game
+        let game = Game {
+            player_1: AGENT_ADDRESS.to_string().into(),
+            player_2: proposal.agent,
+            created_at: created_at,
+        };
+
+        let game_entry = Entry::App(
+            "game".into(),
+            game.into(),
+        );
+        let game_address = hdk::commit_entry(&game_entry)?;
+
+        // link to the proposal
+        hdk::link_entries(
+            &proposal_address,
+            &game_address,
+            "from_proposal", // why not game_from_proposal
+            ""
+        )?;
+
+        //Ok(game_address)
+        Ok(())
+    }
+    
+    #[zome_fn("hc_public")]
+    fn check_responses(proposal_address: Address) -> ZomeApiResult<Vec<Game>> {
+        hdk::utils::get_links_and_load_type(
+            &proposal_address, 
+            LinkMatch::Exactly("from_proposal".into()), 
+            LinkMatch::Any
+        )
+    }
+
+
     #[zome_fn("hc_public")]
     fn get_proposals() -> ZomeApiResult<Vec<GameProposal>> {
         let anchor_address = Entry::App(
