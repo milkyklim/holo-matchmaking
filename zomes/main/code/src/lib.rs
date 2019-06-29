@@ -79,6 +79,33 @@ mod my_zome {
         )
     }
 
+    #[entry_def]
+    fn anchor_entry_def() -> ValidatingEntryType {
+        entry!{
+            name: "anchor",
+            description: "central location to place links",
+            sharing: Sharing::Public,
+            validation_package: || {
+                hdk::ValidationPackageDefinition::Entry
+            },
+            validation: |_validation_data: hdk::EntryValidationData<String>| {
+                Ok(())
+            },
+            links: [
+                to!(
+                    "game_proposal", // must match target entry type name
+                    link_type: "has_proposal", // can be arbitrary
+                    validation_package: || {
+                        hdk::ValidationPackageDefinition::Entry
+                    },
+                    validation: |_validation_data: hdk::LinkValidationData| {
+                        Ok(())
+                    }
+                )
+            ]
+        }
+    }
+
     #[zome_fn("hc_public")]
     fn create_proposal(message: String) -> ZomeApiResult<Address> {
         let proposal = GameProposal {
