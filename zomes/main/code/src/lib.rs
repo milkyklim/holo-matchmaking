@@ -79,6 +79,9 @@ mod my_zome {
                         }
                         
                     },
+                    EntryValidationData::Delete{..} => {
+                        Ok(())
+                    },
                     _ => {
                         Err("Updating or deleting proposal is not allowed".into())
                     }
