@@ -175,11 +175,11 @@ mod my_zome {
     }
 
     #[zome_fn("fn_public")]
-    fn accept_proposal(proposal_address: Address, created_at: u32) -> ZomeApiResult<()> {
+    fn accept_proposal(proposal_address: Address, created_at: u32) -> ZomeApiResult<(Address)> {
         let proposal: GameProposal = hdk::utils::get_as_type(proposal_address.clone())?;
         // create new game
         let game = Game {
-            player_1: AGENT_ADDRESS.to_string().into(),
+            player_1: AGENT_ADDRESS.clone(),
             player_2: proposal.agent,
             created_at: created_at,
         };
@@ -198,8 +198,7 @@ mod my_zome {
             ""
         )?;
 
-        //Ok(game_address)
-        Ok(())
+        Ok(game_address)
     }
 
     #[zome_fn("hc_public")]
