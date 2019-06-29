@@ -12,6 +12,8 @@ extern crate holochain_json_derive;
 use hdk::{
     entry_definition::ValidatingEntryType,
     error::ZomeApiResult,
+    AGENT_ADDRESS, // api::AGENT_ADDRESS,
+    EntryValidationData,
 };
 use hdk::holochain_core_types::{
     entry::Entry,
@@ -35,8 +37,9 @@ use hdk_proc_macros::zome;
 // agent's chain via the exposed function create_my_entry
 
 #[derive(Serialize, Deserialize, Debug, DefaultJson,Clone)]
-pub struct MyEntry {
-    content: String,
+pub struct GameProposal {
+    agent: Address,
+    message: String,
 }
 
 #[zome]
@@ -48,30 +51,47 @@ mod my_zome {
     }
 
     #[entry_def]
-     fn my_entry_def() -> ValidatingEntryType {
+     fn game_proposal_entry_def() -> ValidatingEntryType {
         entry!(
-            name: "my_entry",
-            description: "this is a same entry defintion",
+            name: "game_proposal",
+            description: "this is a same entry representing a proposal to play a game",
             sharing: Sharing::Public,
             validation_package: || {
                 hdk::ValidationPackageDefinition::Entry
             },
-            validation: | _validation_data: hdk::EntryValidationData<MyEntry>| {
-                Ok(())
+            validation: | validation_data: hdk::EntryValidationData<GameProposal>| {
+                match validation_data {
+                    EntryValidationData::Create {entry, validation_data} => {
+                        
+                        let proposal = GameProposal::from(entry);
+                        if validation_data.sources().contains(&proposal.agent) {
+                            Ok(())
+                        } else {
+                            Err("Cannot author a proposal from another agent".into())
+                        }
+                        
+                    },
+                    _ => {
+                        Err("Updating or deleting proposal is not allowed".into())
+                    }
+                }
             }
         )
     }
 
     #[zome_fn("hc_public")]
-    fn create_my_entry(entry: MyEntry) -> ZomeApiResult<Address> {
-        let entry = Entry::App("my_entry".into(), entry.into());
-        let address = hdk::commit_entry(&entry)?;
-        Ok(address)
-    }
+    fn create_proposal(message: String) -> ZomeApiResult<Address> {
+        let proposal = GameProposal {
+            agent: AGENT_ADDRESS.clone(),
+            message: message,
+        };
 
-    #[zome_fn("hc_public")]
-    fn get_my_entry(address: Address) -> ZomeApiResult<Option<Entry>> {
-        hdk::get_entry(&address)
+        let entry = Entry::App(
+            "game_proposal".into(),
+            proposal.into()
+        );
+
+        hdk::commit_entry(&entry)
     }
 
 }
