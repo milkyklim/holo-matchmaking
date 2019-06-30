@@ -4,6 +4,8 @@
 
 Reference: [wikipedia.org](https://en.wikipedia.org/wiki/Nim).
 
+Implementation: [https://github.com/milkyklim/holo-nim-game](holo-nim-game).
+
 **Rules:**
 
 - Game starts with 3 piles of `[x_, y, z]` stones.
